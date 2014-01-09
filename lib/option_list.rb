@@ -20,7 +20,7 @@ require 'set'
 #The philosophy and opinion expressed through this code is that errors should
 #be detected as close to the point of error as possible and that an error is
 #preferable to running with potentially incorrect results. As a result, it
-#will be noted that the programmer does not hesitate to use the fAE, a wrapper
+#will be noted that the programmer does not hesitate to use the error, a wrapper
 #of the "fail" keyword, liberally throughout the code to achieve this end.
 #Complimentary to this is the idea that the library (gem) writer should do as
 #much of the "heavy lifting" as possible, with clear, detailed documentation so
@@ -46,7 +46,7 @@ class OptionList
 
   #The option list code version.
   def self.version
-    '1.1.0'
+    '1.1.1'
   end
   
   #The option list code version. This is a redirect to the class method.
@@ -96,7 +96,7 @@ class OptionList
   #==== Exceptions:
   #* ArgumentError for a number of invalid argument conditions.
   def initialize(*option_specs, &select_block)
-    fAE "Missing option specifications." if option_specs.empty?
+    error "Missing option specifications." if option_specs.empty?
     @mandatory  = Array.new
     @categories = Hash.new
     @default    = Hash.new
@@ -107,7 +107,7 @@ class OptionList
       elsif spec.is_a?(Array)
         array_spec(spec)
       else
-        fAE "Found #{spec.class} instead of Hash or Array."
+        error "Found #{spec.class} instead of Hash or Array."
       end
     end
     
@@ -168,30 +168,36 @@ class OptionList
   #After processing the selections, the selection validation block is called 
   #if one was defined for the constructor.
   def select(selections=[])
-    selected = @default.clone
     selections = [selections] unless selections.is_a?(Array)
-    dup = Set.new
+    selected = process_selections(selections)
+    
+    @mandatory.each do |cat|
+      error "Missing mandatory setting #{cat}" unless selected[cat]
+    end
+    
+    @select_block.call(selected) if @select_block
+    selected
+  end
+  
+  private  #Private stuff follows.
 
+  #Process a list of option selections.
+  def process_selections(selections)
+    selected, dup = @default.clone, Set.new
+    
     selections.each do |opt|
       if opt.is_a?(Symbol)
         symbolic_selection(opt, selected, dup)
       elsif opt.is_a?(Hash)
         hash_selections(opt, selected, dup)
       else
-        fAE "Found #{opt.class} instead of Hash or Symbol."
+        error "Found #{opt.class} instead of Hash or Symbol."
       end
     end
     
-    @mandatory.each do |cat|
-      fAE "Missing mandatory setting #{cat}" unless selected[cat]
-    end
-    
-    @select_block.call(selected) unless @select_block.nil?
     selected
   end
   
-  private  #Private stuff follows.
-
   #Return a internal category marker constant for value entries.
   def value_entry
     'A value entry.'
@@ -200,45 +206,54 @@ class OptionList
   #Process an array spec that lists all the valid values for an option. See
   #the new method for more information on these specs.
   def array_spec(spec)
-    cat = spec[0]
-    spec = spec[1...spec.length]
-    
-    fAE "Found #{cat.class}, expected Symbol." unless cat.is_a?(Symbol)   
-    fAE "Duplicate category: #{cat}" if @default.has_key?(cat)
-    fAE "Invalid number of entries for #{cat}." unless spec.length > 1
-    @default.define_singleton_method(cat) { self[cat] }
-    
-    spec.each_with_index do |opt, index|
+    category, default, spec_len = spec[0], spec[1], spec.length
+    error "Invalid number of entries for #{category}." unless spec_len > 2
+    add_option_reader(category)
+    array_spec_default(category, default)
+    array_spec_tail_rest(category, spec[2...spec_len])
+  end
+  
+  #Process the first element of the array spec tail.  
+  def array_spec_default(category, opt)
+    opt && array_spec_single(category, opt)
+    @default[category] = opt
+    @mandatory << category if opt == false
+  end
+  
+  #Process the rest of the array spec tail.  
+  def array_spec_tail_rest(category, spec_tail_rest)
+    spec_tail_rest.each do |opt|
       if opt
-        fAE "Found #{opt.class}, expected Symbol." unless opt.is_a?(Symbol)   
-        fAE "Duplicate option: #{opt}" if @categories.has_key?(opt)
-        
-        @categories[opt] = cat
-        qry = (opt.to_s + '?').to_sym
-        @default.define_singleton_method(qry) { self[cat] == opt }
-        @default[cat] = opt if index == 0
-      elsif index == 0
-        @default[cat] = opt
-        @mandatory << cat if opt == false
+        array_spec_single(category, opt)
       else
-        fAE "The values nil/false are only allowed as the default option."
+        error "The values nil/false are only allowed as the default option."
       end
     end
+  end
+  
+  #Process a single array spec option
+  def array_spec_single(category, opt)
+    duplicate_entry_check(@categories, opt, 'option')
+    @categories[opt] = category
+    add_option_tester(category, opt)
   end
   
   #Process a hash spec that lists only the default value for an option. See
   #the new method for more information on these specs.
   def hash_spec(spec)
-    fAE "Hash contains no specs." unless spec.length > 0
+    error "Hash contains no specs." unless spec.length > 0
 
-    spec.each do |cat, value|
-      fAE "Found #{cat.class}, expected Symbol." unless cat.is_a?(Symbol)    
-      fAE "Duplicate category: #{cat}" if @default.has_key?(cat)
-      
-      @default.define_singleton_method(cat) { self[cat] }
-      @categories[cat] = value_entry
-      @default[cat] = value    
+    spec.each do |category, value|
+      add_option_reader(category)
+      set_default_option_value(category, value)
+      @mandatory << category if value == false
     end
+  end
+  
+  #Set the default value of a value entry.
+  def set_default_option_value(category, value)
+    @categories[category] = value_entry
+    @default[category] = value    
   end
   
   #Process a symbolic option selection.
@@ -246,12 +261,11 @@ class OptionList
   #* option - a symbol to process.
   #* selected - a hash of selected data.
   #* dup - a set of categories that have been set. Used to detect duplicates.
-  def symbolic_selection(option, selected, dup)
-    fAE "Unknown option: #{option}." unless @categories.has_key?(option)
-    cat = @categories[option]
-    fAE "Category #{cat} has multiple values." if dup.include?(cat)
-    dup.add(cat)
-    selected[cat] = option
+  def symbolic_selection(symbol_option, selected, dup)
+    missing_entry_check(@categories, symbol_option, 'option')
+    category = @categories[symbol_option]
+    hash_option_dup_check(category, dup)
+    selected[category] = symbol_option
   end
   
   #Process a hash of option selection values.
@@ -259,23 +273,54 @@ class OptionList
   #* options - a hash of options to process.
   #* selected - a hash of selected data.
   #* dup - a set of categories that have been set. Used to detect duplicates.
-  def hash_selections(options, selected, dup)
-    options.each do |cat, value|
-      fAE "Not a category: #{cat}." unless @default.has_key?(cat)
-      fAE "Category #{cat} has multiple values." if dup.include?(cat)
-           
-      unless (@categories[cat] == value_entry) || value.nil?
-        fAE "Found #{opt.class}, expected Symbol." unless value.is_a?(Symbol)
-        fAE "Invalid option: #{value}." unless @categories[value] == cat
-      end
-      
-      dup.add(cat)
-      selected[cat] = value
+  def hash_selections(hash_options, selected, dup)
+    hash_options.each do |category, value|
+      missing_entry_check(@default, category, 'category')
+
+      hash_option_value_check(category, value)
+      hash_option_dup_check(category, dup)
+      selected[category] = value
     end
+  end
+  
+  #Validate a hash option value.
+  def hash_option_value_check(value_category, value)
+    if (@categories[value_category] != value_entry) && value
+      error "Found #{value.class}, expected Symbol." unless value.is_a?(Symbol)
+      error "Invalid option: #{value}." unless @categories[value] == value_category
+    end
+  end
+ 
+  #Add to set with no duplicates allowed. 
+  def hash_option_dup_check(category, dup)
+    error "Category #{category} has multiple values." unless dup.add?(category)
+  end
+  
+  #Add query method for the selected category.
+  def add_option_reader(name)
+    duplicate_entry_check(@default, name, 'category')
+    @default.define_singleton_method(name) { self[name] }
+  end
+
+  #Add a query method (eg: has_stuff? ) for the selected option.
+  def add_option_tester(target, value)
+    qry = (value.to_s + '?').to_sym
+    @default.define_singleton_method(qry) { self[target] == value}
+  end
+  
+  #Flag any duplicate entry errors.
+  def duplicate_entry_check(target, entry, detail)
+    error "Found #{entry.class}, expected Symbol." unless entry.is_a?(Symbol)   
+    error "Duplicate #{detail}: #{entry}" if target.has_key?(entry)
+  end
+  
+  #Flag any missing entry errors.
+  def missing_entry_check(target, entry, detail)
+    error "Unknown #{detail}: #{entry}" unless target.has_key?(entry)
   end
 
   #Fail with an argument error.
-  def fAE(msg)
-    fail(ArgumentError, msg, caller)
+  def error(messsage)
+    fail(ArgumentError, messsage, caller)
   end
 end

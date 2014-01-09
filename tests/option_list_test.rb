@@ -211,6 +211,12 @@ class OptionListTester < MiniTest::Unit::TestCase
     assert_equal(o.history, :nohistory)
 
     assert_raises(ArgumentError) { ol2.select() }
+    
+    ol3 = OptionList.new(page_len: false)
+    o = ol3.select(page_len: 42)
+    assert_equal(o.page_len, 42)
+    
+    assert_raises(ArgumentError) { ol3.select() }
   end
   
   def test_that_it_does_not_munge_parms

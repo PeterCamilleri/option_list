@@ -3,8 +3,8 @@
 # SIRE Version 0.2.6
 
 require 'readline'
-require 'prime.rb'
 require 'pp'
+require_relative 'lib/option_list'
 include Readline
 
 class Object 
@@ -24,6 +24,9 @@ class Object
   end
 end
 
+def show_args(*args)
+  args
+end
 
 puts "Welcome to SIRE Version 0.2.6"
 puts "Simple Interactive Ruby Environment"
@@ -38,6 +41,7 @@ until done
     done = true
   rescue Exception => e
     puts "#{e.class} detected: #{e}"
+    puts e.backtrace
     puts
   end
 end
