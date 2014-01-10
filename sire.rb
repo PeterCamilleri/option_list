@@ -3,7 +3,7 @@
 # SIRE Version 0.2.6
 
 require 'readline'
-require 'pp'
+require 'awesome_print'
 require_relative 'lib/option_list'
 include Readline
 
@@ -36,7 +36,7 @@ until done
   begin
     line = readline('SIRE>', true)
     result = eval line
-    pp result unless result.nil?
+    ap result unless result.nil?
   rescue Interrupt
     done = true
   rescue Exception => e
