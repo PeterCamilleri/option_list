@@ -11,24 +11,24 @@ require 'set'
 #Embraced reek and git and created the user's guide to pair down rdoc mark up
 #to be less obtrusive to the code.
 #=== Version 1.1.0
-#Added a default value of false to signify that no default exists for a 
+#Added a default value of false to signify that no default exists for a
 #mandatory parameter.
 #Modified processing of array specs to avoid side effects in the parameters.
 class OptionList
 
   #The option list code version.
   def self.version
-    '1.1.1'
-  end
-  
-  #The option list code version. This is a redirect to the class method.
-  def version
-    self.class.version
+    OptionList::VERSION
   end
 
-  #Create an option list from an array of option specifications. 
+  #The option list code version. This is a redirect to the class method.
+  def version
+    OptionList::VERSION
+  end
+
+  #Create an option list from an array of option specifications.
   #==== Parameters:
-  #* option_specs - The comma separated option specifications, made into an 
+  #* option_specs - The comma separated option specifications, made into an
   #  array by the splat operator.
   #* select_block - An optional block of code that is called when selections
   #  have been made. This allows for custom validations to be applied at that
@@ -41,7 +41,7 @@ class OptionList
     @mandatory  = Array.new
     @categories = Hash.new
     @default    = Hash.new
-    
+
     option_specs.each do |spec|
       if spec.is_a?(Hash)
         hash_spec(spec)
@@ -51,7 +51,7 @@ class OptionList
         error "Found #{spec.class} instead of Hash or Array."
       end
     end
-    
+
     @select_block = select_block
   end
 
@@ -66,26 +66,26 @@ class OptionList
   #==== Exceptions:
   #* ArgumentError for a number of invalid argument conditions.
   #==== Notes:
-  #After processing the selections, the selection validation block is called 
+  #After processing the selections, the selection validation block is called
   #if one was defined for the constructor.
   def select(selections=[])
     selections = [selections] unless selections.is_a?(Array)
     selected = process_selections(selections)
-    
+
     @mandatory.each do |cat|
       error "Missing mandatory setting #{cat}" unless selected[cat]
     end
-    
+
     @select_block.call(selected) if @select_block
     selected
   end
-  
+
   private  #Private stuff follows.
 
   #Process a list of option selections.
   def process_selections(selections)
     selected, dup = @default.clone, Set.new
-    
+
     selections.each do |opt|
       if opt.is_a?(Symbol)
         symbolic_selection(opt, selected, dup)
@@ -95,15 +95,15 @@ class OptionList
         error "Found #{opt.class} instead of Hash or Symbol."
       end
     end
-    
+
     selected
   end
-  
+
   #Return a internal category marker constant for value entries.
   def value_entry
     'A value entry.'
   end
-  
+
   #Process an array spec that lists all the valid values for an option. See
   #the new method for more information on these specs.
   def array_spec(spec)
@@ -113,15 +113,15 @@ class OptionList
     array_spec_default(category, default)
     array_spec_tail_rest(category, spec[2...spec_len])
   end
-  
-  #Process the first element of the array spec tail.  
+
+  #Process the first element of the array spec tail.
   def array_spec_default(category, opt)
     opt && array_spec_single(category, opt)
     @default[category] = opt
     @mandatory << category if opt == false
   end
-  
-  #Process the rest of the array spec tail.  
+
+  #Process the rest of the array spec tail.
   def array_spec_tail_rest(category, spec_tail_rest)
     spec_tail_rest.each do |opt|
       if opt
@@ -131,14 +131,14 @@ class OptionList
       end
     end
   end
-  
+
   #Process a single array spec option
   def array_spec_single(category, opt)
     duplicate_entry_check(@categories, opt, 'option')
     @categories[opt] = category
     add_option_tester(category, opt)
   end
-  
+
   #Process a hash spec that lists only the default value for an option. See
   #the new method for more information on these specs.
   def hash_spec(spec)
@@ -150,13 +150,13 @@ class OptionList
       @mandatory << category if value == false
     end
   end
-  
+
   #Set the default value of a value entry.
   def set_default_option_value(category, value)
     @categories[category] = value_entry
-    @default[category] = value    
+    @default[category] = value
   end
-  
+
   #Process a symbolic option selection.
   #==== Parameters:
   #* option - a symbol to process.
@@ -168,7 +168,7 @@ class OptionList
     hash_option_dup_check(category, dup)
     selected[category] = symbol_option
   end
-  
+
   #Process a hash of option selection values.
   #==== Parameters:
   #* options - a hash of options to process.
@@ -183,7 +183,7 @@ class OptionList
       selected[category] = value
     end
   end
-  
+
   #Validate a hash option value.
   def hash_option_value_check(value_category, value)
     if (@categories[value_category] != value_entry) && value
@@ -191,12 +191,12 @@ class OptionList
       error "Invalid option: #{value}." unless @categories[value] == value_category
     end
   end
- 
-  #Add to set with no duplicates allowed. 
+
+  #Add to set with no duplicates allowed.
   def hash_option_dup_check(category, dup)
     error "Category #{category} has multiple values." unless dup.add?(category)
   end
-  
+
   #Add query method for the selected category.
   def add_option_reader(name)
     duplicate_entry_check(@default, name, 'category')
@@ -208,13 +208,13 @@ class OptionList
     qry = (value.to_s + '?').to_sym
     @default.define_singleton_method(qry) { self[target] == value}
   end
-  
+
   #Flag any duplicate entry errors.
   def duplicate_entry_check(target, entry, detail)
-    error "Found #{entry.class}, expected Symbol." unless entry.is_a?(Symbol)   
+    error "Found #{entry.class}, expected Symbol." unless entry.is_a?(Symbol)
     error "Duplicate #{detail}: #{entry}" if target.has_key?(entry)
   end
-  
+
   #Flag any missing entry errors.
   def missing_entry_check(target, entry, detail)
     error "Unknown #{detail}: #{entry}" unless target.has_key?(entry)
