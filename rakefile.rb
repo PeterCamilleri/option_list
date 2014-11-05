@@ -4,7 +4,6 @@ require 'rdoc/task'
 
 RDoc::Task.new do |rdoc|
   rdoc.rdoc_dir = "rdoc"
-  #rdoc.main = "option_list.rb"
   rdoc.rdoc_files = ['lib/option_list.rb', 'license.txt']
   rdoc.options << '--visibility' << 'private'
 end
