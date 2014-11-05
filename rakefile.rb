@@ -4,7 +4,10 @@ require 'rdoc/task'
 
 RDoc::Task.new do |rdoc|
   rdoc.rdoc_dir = "rdoc"
-  rdoc.rdoc_files = ['lib/option_list.rb', 'license.txt']
+
+  #List out all the files to be documented.
+  rdoc.rdoc_files.include("lib/**/*.rb", "license.txt", "README.md")
+
   rdoc.options << '--visibility' << 'private'
 end
 
