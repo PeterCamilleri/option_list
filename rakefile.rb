@@ -1,6 +1,9 @@
 #!/usr/bin/env rake
+# coding: utf-8
+
 require 'rake/testtask'
 require 'rdoc/task'
+require "bundler/gem_tasks"
 
 RDoc::Task.new do |rdoc|
   rdoc.rdoc_dir = "rdoc"
@@ -16,6 +19,13 @@ Rake::TestTask.new do |t|
   t.verbose = false
 end
 
+desc "Run a scan for smelly code!"
 task :reek do |t|
   `reek lib\\*.rb > reek.txt`
+end
+
+desc "What version of option_list is this?"
+task :vers do |t|
+  puts
+  puts "option_list version = #{OptionList::VERSION}"
 end
