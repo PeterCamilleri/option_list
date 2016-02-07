@@ -9,7 +9,7 @@ require 'option_list/version'
 Gem::Specification.new do |s|
   s.name = "option_list"
   s.summary = "Flexible, Easy Function Parameters with Validation."
-  s.description = 'Flexible, Easy Function Parameters with Validation. '
+  s.description = '[Deprecated] Flexible, Easy Function Parameters with Validation. '
   s.version = OptionList::VERSION
   s.author = ["Peter Camilleri"]
   s.email = "peter.c.camilleri@gmail.com"
