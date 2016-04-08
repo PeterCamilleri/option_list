@@ -1,14 +1,24 @@
-# The Option List gem.
+# OptionList
 
-This gem implements the concept that parameter validation is long and
-tedious and something needed to be done about that. This gem implements
+This gem addresses the fact that parameter validation is long and
+tedious and something needs to be done about that. This gem implements
 the idea that parameters be described separately and validated in a
 single line of client method code.
 
-This gem was my first effort in the area of gem creation, and if I'm
-honest, it is rather doubtful that it brings much to the table. Most
-of what it does has been subsumed by the Ruby Language itself, starting
-with version 1.9 and further through versions 2.0, 2.1, and 2.2.
+Most of what this gem does has been subsumed by the Ruby Language itself,
+starting with version 1.9 and further with versions 2.0 and beyond.
+
+Finally, I'd like to shed the aura of professional, inhumanity for just a
+moment and add a note about this code. This was my first attempt at creating
+a gem. As such there is very much a newbie vibe to the code. I hope you can
+chalk this up to just a part of the learning process. None the less, if there
+are improvements that you (the reader) could suggest, I'd really appreciate
+hearing about them.
+
+Thanks in advance, Peter.
+
+
+## Installation
 
 Add this line to your application's Gemfile:
 
@@ -24,7 +34,7 @@ Or install it yourself as:
 
 ## Usage
 
-The use of option_list oocurs in three phases: Describing the Parameters,
+The use of option_list occurs in three phases: Describing the Parameters,
 Passing in Parameters and Validating/Accessing the Parameters. This can be
 seen in the following example:
 
@@ -54,12 +64,19 @@ seen in the following example:
     end
 
 The option_list gem is described in the The option_list User's Guide
-which covers version 1.1.1 which has no material change from 1.1.2
+which covers version 1.1.1 which has no material change from 1.1.3
 
 ## Contributing
 
-1. Fork it
+#### Plan A
+
+1. Fork it ( https://github.com/PeterCamilleri/option_list/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+#### Plan B
+
+Go to the GitHub repository and raise an issue calling attention to some
+aspect that could use some TLC or a suggestion or an idea.
