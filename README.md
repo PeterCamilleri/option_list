@@ -8,12 +8,11 @@ single line of client method code.
 Most of what this gem does has been subsumed by the Ruby Language itself,
 starting with version 1.9 and further with versions 2.0 and beyond.
 
-Finally, I'd like to shed the aura of professional, inhumanity for just a
-moment and add a note about this code. This was my first attempt at creating
-a gem. As such there is very much a newbie vibe to the code. I hope you can
-chalk this up to just a part of the learning process. None the less, if there
-are improvements that you (the reader) could suggest, I'd really appreciate
-hearing about them.
+Finally, I'd like to add a personal note about this code. This was my first
+attempt at creating a gem. As such there is very much a newbie vibe to the
+code. I hope you can chalk this up to just a part of the learning process.
+None the less, if there are improvements that you (the reader) could suggest,
+I'd really appreciate hearing about them.
 
 Thanks in advance, Peter.
 
