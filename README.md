@@ -31,37 +31,39 @@ Or install it yourself as:
 
     $ gem install option_list
 
+The options_list gem is at: ( https://rubygems.org/gems/options_list )
+
 ## Usage
 
 The use of option_list occurs in three phases: Describing the Parameters,
 Passing in Parameters and Validating/Accessing the Parameters. This can be
 seen in the following example:
+```ruby
+module ReadLine
+  #Create the parameter specification (simplified for brevity)
+  @spec = OptionList.new([:buffer, :history, :no_history], {:depth => 50}) do |options|
+    fail "Depth must be an integer" unless options.depth.is_a(Integer)
+    fail "Depth must be positive" if options.depth < 1
+  end
 
-    module ReadLine
-      #Create the parameter specification (simplified for brevity)
-      @spec = OptionList.new([:buffer, :history, :no_history], {:depth => 50}) do |options|
-        fail "Depth must be an integer" unless options.depth.is_a(Integer)
-        fail "Depth must be positive" if options.depth < 1
-      end
+  class << self
+    attr_reader :spec
+  end
 
-      class << self
-        attr_reader :spec
-      end
+  def read_line(prompt, *options)
+    @options = ReadLine.spec.select(options)
+    #Further code deleted for brevity.
+    #Somewhere along the line it records the last line.
+    buffer_line(current_line)
+    current_line
+  end
 
-      def read_line(prompt, *options)
-        @options = ReadLine.spec.select(options)
-        #Further code deleted for brevity.
-        #Somewhere along the line it records the last line.
-        buffer_line(current_line)
-        current_line
-      end
-
-      def buffer_line(line)
-        @line_buffer << line if @options.history?
-        @line_buffer.delete_at(0) if @line_buffer.length > @options.depth
-      end
-    end
-
+  def buffer_line(line)
+    @line_buffer << line if @options.history?
+    @line_buffer.delete_at(0) if @line_buffer.length > @options.depth
+  end
+end
+```
 The option_list gem is described in the The option_list User's Guide
 which covers version 1.1.1 which has no material change from 1.1.3
 
