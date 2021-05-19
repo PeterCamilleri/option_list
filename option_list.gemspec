@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
   s.required_ruby_version = '>=1.9.3'
 
-  s.add_development_dependency "bundler", "~> 1.3"
+  s.add_development_dependency "bundler", ">= 2.1.0"
   s.add_development_dependency 'rake'
   s.add_development_dependency 'reek', "~> 1.3.8"
   s.add_development_dependency 'minitest', "~> 4.7.5"
@@ -29,7 +29,6 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = ['license.txt']
 
   s.license = 'MIT'
-  s.has_rdoc = true
   s.require_path = 'lib'
 end
 
